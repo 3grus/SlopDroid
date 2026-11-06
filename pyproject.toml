@@ -1,0 +1,33 @@
+[project]
+name = "sepolmap-suite"
+version = "0.1.0"
+description = "SELinux reachability + Android exported-component attack-surface and taint analysis for unpacked firmware."
+readme = "README.md"
+requires-python = ">=3.9"
+
+# Core, always pip-installable. Covers Stage 1 (appsurface.py) and the Stage 2 harness
+# (taint.py: config emission + result parsing + comparison). Pure-stdlib code (analyze.py's
+# context parsing, graph.py) needs nothing here.
+dependencies = [
+    "androguard>=4.1.0",
+]
+
+# NOTE on the policy engine (analyze.py / Stage 0): the SELinux `setools` (TERuleQuery,
+# DomainTransitionAnalysis, InfoFlowAnalysis) is NOT on PyPI -- the PyPI name "setools" is an
+# unrelated project. Install it from your distro (`apt install setools python3-setools`, or
+# `dnf install setools`) or from source, then run analyze.py under a uv venv created with
+# access to it:   uv venv --system-site-packages   (see QUICKSTART.md "Policy engine (setools)").
+# It is deliberately not listed here so `uv sync` cannot be broken by an unsatisfiable pin.
+
+# Optional, pip-installable engine kept out of the default sync so `uv sync` always succeeds.
+# Install with:  uv sync --group taint
+[dependency-groups]
+# Stage 2 engine: Mariana Trench ships a prebuilt binary via PyPI (Linux x86_64). FlowDroid is
+# a Java jar built separately -- it is not a Python dependency.
+# `packaging` is an undeclared runtime dependency of mariana-trench 1.0.x (pyredex imports it);
+# pin it in so the binary actually launches.
+taint = ["mariana-trench", "packaging"]
+
+# Run the tools in-tree (python analyze.py ...); nothing is built or installed as a package.
+[tool.uv]
+package = false

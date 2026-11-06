@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# PRIMARY dependency management for this suite is uv + pyproject.toml.  See QUICKSTART.md.
+#   uv sync                 # core (androguard): Stage 1 + Stage 2 harness
+#   uv sync --group taint   # + Mariana Trench (Stage 2 engine)
+#
+# This file is a fallback for plain `pip`. It intentionally does NOT list setools:
+# ─────────────────────────────────────────────────────────────────────────────────────────
+
+# Stage 1 (appsurface.py) + Stage 2 harness (taint.py): APK parsing + DEX xref.
+androguard>=4.1.0
+
+# Stage 2 engine (optional): Mariana Trench ships a prebuilt binary (Linux x86_64).
+#   packaging is an undeclared runtime dep of mariana-trench 1.0.x (pyredex imports it).
+# mariana-trench
+# packaging
+
+# NOT installable here — do not add a PyPI `setools` pin (that name is an unrelated project):
+#   * SELinux setools (analyze.py / Stage 0): install from your distro
+#       apt install setools python3-setools      # Debian/Ubuntu
+#       dnf install setools                       # Fedora/RHEL
+#     then expose it to the venv with `uv venv --system-site-packages` (see QUICKSTART.md).
+#   * FlowDroid (Stage 2 engine): a Java jar built from its own repo; not a Python package.

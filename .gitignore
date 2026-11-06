@@ -1,0 +1,72 @@
+# ───────────────────────── Python ─────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ─────────────────────── Virtualenv / uv ───────────────────
+# The venv is machine-specific; recreate it with `uv sync`.
+.venv/
+venv/
+# NOTE: uv.lock is intentionally NOT ignored — commit it for reproducible installs.
+
+# ───────────────────── Editor / OS cruft ───────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ──────────────── Tool-generated work & outputs ────────────
+# Default scratch/working dirs created by the Stage-2 engines (taint.py) and emit:
+taint_work/
+taint_spec_out/
+spec_out/
+work/
+w/
+# Mariana Trench / FlowDroid per-run artifacts:
+mt_out_*/
+flowdroid_*.xml
+SourcesAndSinks.txt
+*_generators.json
+generator_config.json
+rules.json
+
+# graph.py renders (regenerated from a reach JSON report; the .html template is inlined
+# in graph.py, so any .html in the tree is generated output):
+*.dot
+*.svg
+*.html
+
+# Unpacked firmware trees & raw images — large, licensed, never commit.
+# (faketree/ is the tiny checked-in fixture and is kept; see the exception below.)
+unpacked/
+*.img
+*.img.raw
+*.br
+payload.bin
+super*.img
+
+# ──────────── Generated analysis reports (optional) ─────────
+# The curated samples reach.json / surf.json ARE tracked as examples.
+# If you'd rather not commit your own run outputs, uncomment these:
+# reach.json
+# surf.json
+# surface.json
+# fd.json
+# mt.json
+# compare.json
+
+# Keep the test fixture even though it sits under app/img ignore patterns.
+!faketree/
+!faketree/**

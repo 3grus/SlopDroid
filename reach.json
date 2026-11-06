@@ -1,0 +1,1 @@
+{"source_domain": "untrusted_app", "policy": "/x", "reached_domains": ["untrusted_app", "priv_app", "system_server"], "by_class": {"file": [{"backing_kind": "file", "perms": ["write", "open"], "artifacts": ["/data/local/tmp/evil"]}]}}

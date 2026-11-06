@@ -1,0 +1,158 @@
+{
+  "source_domain": "untrusted_app",
+  "reach_report": "/x",
+  "reached_domains": [
+    "priv_app",
+    "system_server",
+    "untrusted_app"
+  ],
+  "writable_path_count": 1,
+  "apps": [
+    {
+      "apk": "/home/surge/clod/android/faketree/system/priv-app/Dialer/Dialer.apk",
+      "package": "com.oem.dialer",
+      "origin": "system/priv-app",
+      "is_priv": true,
+      "is_system": true,
+      "target_sdk": 30,
+      "min_sdk": 21,
+      "seinfo": "default",
+      "domain_candidates": [
+        {
+          "domain": "priv_app",
+          "confidence": "priv",
+          "reason": "isPrivApp=true"
+        }
+      ],
+      "ipc_reachable": true,
+      "reached_via": [
+        "priv_app"
+      ],
+      "exported_components": [
+        {
+          "kind": "activity",
+          "name": "com.oem.dialer.Dial",
+          "exported": true,
+          "export_confidence": "explicit",
+          "unguarded": true,
+          "permission": null,
+          "ingest_points": [
+            "getIntent() extras",
+            "intent data URI"
+          ],
+          "flags": [],
+          "file_ingesting": false
+        },
+        {
+          "kind": "provider",
+          "name": "com.oem.dialer.CallLog",
+          "exported": true,
+          "export_confidence": "explicit",
+          "unguarded": true,
+          "permission": null,
+          "ingest_points": [
+            "query/insert/update/delete/call: uri, selection, args, values"
+          ],
+          "flags": [],
+          "authorities": "a",
+          "read_permission": null,
+          "write_permission": null,
+          "grant_uri_permissions": false,
+          "path_permissions": null,
+          "file_ingesting": false
+        }
+      ],
+      "file_channel_paths": {}
+    },
+    {
+      "apk": "/home/surge/clod/android/faketree/vendor/app/Thing/Thing.apk",
+      "package": "com.vendor.thing",
+      "origin": "vendor/app",
+      "is_priv": false,
+      "is_system": true,
+      "target_sdk": 30,
+      "min_sdk": 21,
+      "seinfo": "default",
+      "domain_candidates": [
+        {
+          "domain": "untrusted_app",
+          "confidence": "default",
+          "reason": "default selector (user=_app)"
+        }
+      ],
+      "ipc_reachable": true,
+      "reached_via": [
+        "untrusted_app"
+      ],
+      "exported_components": [
+        {
+          "kind": "service",
+          "name": "com.vendor.thing.Bg",
+          "exported": true,
+          "export_confidence": "explicit",
+          "unguarded": true,
+          "permission": null,
+          "ingest_points": [
+            "onBind/onStartCommand intent extras"
+          ],
+          "flags": [],
+          "file_ingesting": false
+        }
+      ],
+      "file_channel_paths": {}
+    },
+    {
+      "apk": "/home/surge/clod/android/faketree/system/app/Settings/Settings.apk",
+      "package": "com.oem.settings",
+      "origin": "system/app",
+      "is_priv": false,
+      "is_system": true,
+      "target_sdk": 30,
+      "min_sdk": 21,
+      "seinfo": "platform",
+      "domain_candidates": [
+        {
+          "domain": "platform_app",
+          "confidence": "seinfo",
+          "reason": "seinfo=platform"
+        }
+      ],
+      "ipc_reachable": false,
+      "reached_via": [],
+      "exported_components": [
+        {
+          "kind": "receiver",
+          "name": "com.oem.settings.Cfg",
+          "exported": true,
+          "export_confidence": "explicit",
+          "unguarded": false,
+          "permission": "com.oem.P",
+          "ingest_points": [
+            "onReceive intent extras/data"
+          ],
+          "flags": [],
+          "file_ingesting": false
+        },
+        {
+          "kind": "activity",
+          "name": "com.oem.settings.Ingest",
+          "exported": true,
+          "export_confidence": "explicit",
+          "unguarded": true,
+          "permission": null,
+          "ingest_points": [
+            "getIntent() extras",
+            "intent data URI"
+          ],
+          "flags": [],
+          "file_ingesting": true
+        }
+      ],
+      "file_channel_paths": {
+        "/data/local/tmp/evil": [
+          "com.oem.settings.Ingest"
+        ]
+      }
+    }
+  ]
+}
