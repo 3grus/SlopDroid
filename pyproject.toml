@@ -31,3 +31,6 @@ taint = ["mariana-trench", "packaging"]
 # Run the tools in-tree (python analyze.py ...); nothing is built or installed as a package.
 [tool.uv]
 package = false
+# dataset 2.x imports SQLAlchemy 2 APIs, but mariana-trench (fb-sapp -> graphene-sqlalchemy) needs
+# SQLAlchemy <2. Without this cap, androguard.misc fails to import and the Stage 1 DEX scan breaks.
+constraint-dependencies = ["dataset<2"]

@@ -21,12 +21,18 @@ from typing import List, Optional
 from . import spec
 
 
+def _dalvik_type(cls: str) -> str:
+    # "android.content.Intent" -> "Landroid/content/Intent;" (the form MT matches on)
+    return "L%s;" % cls.replace(".", "/")
+
+
 def _generator_entry(sig: spec.Sig, role: str) -> dict:
     model = {("sources" if role == "source" else "sinks"):
              [{"kind": sig.cat, "port": sig.port}]}
     return {
         "find": "methods",
-        "where": [{"constraint": "signature_match", "parent": sig.cls, "name": sig.name}],
+        "where": [{"constraint": "signature_match", "parent": _dalvik_type(sig.cls),
+                   "name": sig.name}],
         "model": model,
     }
 
@@ -45,20 +51,24 @@ def emit_rules(path: str) -> str:
     return path
 
 
-def emit_generator_config(path: str, generators_filename: str) -> str:
+def emit_generator_config(path: str, generator_name: str) -> str:
+    # MT resolves {"name": X} to X.models in the search paths.
     with open(path, "w") as f:
-        json.dump([generators_filename], f, indent=2)
+        json.dump([{"name": generator_name}], f, indent=2)
     return path
 
 
 def run(apk: str, rules_path: str, genconfig: str, search_dir: str, out_dir: str,
         source_root: Optional[str] = None, timeout: int = 3600,
-        binary: str = "mariana-trench") -> None:
+        binary: str = "mariana-trench", system_jar: Optional[str] = None) -> None:
     os.makedirs(out_dir, exist_ok=True)
     cmd = [binary, "--apk-path", apk, "--rules-paths", rules_path,
            "--model-generator-configuration-paths", genconfig,
            "--model-generator-search-paths", search_dir,
            "--output-directory", out_dir]
+    if system_jar:
+        # Without android.jar, MT cannot resolve framework methods and generates 0 models.
+        cmd += ["--system-jar-configuration-path", system_jar]
     if source_root:
         cmd += ["--source-root-directory", source_root]
     subprocess.run(cmd, check=True, timeout=timeout)
@@ -81,8 +91,11 @@ def _match_component(cls: str, components: List[str]) -> Optional[str]:
 
 
 def _iter_models(out_dir: str):
-    """Yield model dicts from out/models@* shards (JSON array or JSON-lines, defensively)."""
-    for fp in sorted(glob.glob(os.path.join(out_dir, "models@*"))):
+    """Yield model dicts from out/model@* shards (JSON array or JSON-lines, defensively).
+
+    MT 1.0.8 writes model@*; models@* is kept for other releases."""
+    for fp in sorted(glob.glob(os.path.join(out_dir, "model@*"))
+                     + glob.glob(os.path.join(out_dir, "models@*"))):
         with open(fp, errors="replace") as f:
             text = f.read().strip()
         if not text:
@@ -132,13 +145,13 @@ def parse(out_dir: str, apk: str, package: str, components: List[str]) -> List[d
 
 def analyze(apk: str, package: str, components: List[str], workdir: str,
             source_root: Optional[str] = None, timeout: int = 3600,
-            binary: str = "mariana-trench") -> List[dict]:
+            binary: str = "mariana-trench", system_jar: Optional[str] = None) -> List[dict]:
     os.makedirs(workdir, exist_ok=True)
-    gens = emit_generators(os.path.join(workdir, "appmap_generators.json"))
+    gens = emit_generators(os.path.join(workdir, "appmap_generators.models"))
     rules_path = emit_rules(os.path.join(workdir, "rules.json"))
     genconfig = emit_generator_config(os.path.join(workdir, "generator_config.json"),
-                                      os.path.basename(gens))
+                                      os.path.splitext(os.path.basename(gens))[0])
     out_dir = os.path.join(workdir, "mt_out_%s" % package)
     run(apk, rules_path, genconfig, workdir, out_dir, source_root=source_root,
-        timeout=timeout, binary=binary)
+        timeout=timeout, binary=binary, system_jar=system_jar)
     return parse(out_dir, apk, package, components)

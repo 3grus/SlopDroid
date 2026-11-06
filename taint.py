@@ -85,7 +85,7 @@ def _run_engine(args, engine_name):
             else:
                 fs = mariana.analyze(t.apk, t.package, t.components, args.workdir,
                                      source_root=args.source_root, timeout=args.timeout,
-                                     binary=args.binary)
+                                     binary=args.binary, system_jar=args.system_jar)
         except Exception as e:
             print("    warn: %s failed on %s: %s" % (engine_name, t.package, e),
                   file=sys.stderr)
@@ -151,6 +151,8 @@ def main():
     mt = sub.add_parser("mariana", help="run Mariana Trench over the shortlist")
     common(mt)
     mt.add_argument("--binary", default="mariana-trench")
+    mt.add_argument("--system-jar", required=True,
+                    help="path to an android.jar (e.g. $PLATFORMS/android-36/android.jar)")
     mt.add_argument("--source-root", help="optional Java source root for better traces")
     mt.add_argument("--timeout", type=int, default=3600)
     mt.set_defaults(func=cmd_mariana)

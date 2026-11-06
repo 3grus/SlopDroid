@@ -48,7 +48,7 @@ PyPI; install it from your distro, then make the uv venv able to import it:
 
 ```bash
 sudo apt install setools python3-setools     # Debian/Ubuntu  (Fedora/RHEL: dnf install setools)
-uv venv --clear --system-site-packages        # recreate the venv so it can see system packages
+uv venv --clear --system-site-packages --python /usr/bin/python3   # must be the system Python
 uv sync --group taint                          # re-install project deps into the new venv
 uv run python -c "import setools; print(setools.__version__)"   # confirm
 ```
@@ -56,11 +56,20 @@ uv run python -c "import setools; print(setools.__version__)"   # confirm
 (The `--system-site-packages` flag survives later `uv sync` runs. If you only need Stages 1–2,
 skip this entirely.)
 
+No distro package (e.g. Arch/CachyOS)? Install `libsepol` and `libselinux`, then build setools
+from its source into the project venv. A plain `uv sync` removes it again, so add `--inexact`:
+
+```bash
+uv pip install /path/to/setools-4.7.1 networkx
+uv sync --inexact --group taint
+```
+
 **FlowDroid** (Stage 2 engine) — a Java jar you build once, plus an Android `platforms` dir:
 
 ```bash
-java -version                                  # JDK 8+ (JDK 21 is fine)
-git clone https://github.com/secure-software-engineering/FlowDroid
+sudo apt install openjdk-21-jdk-headless maven  # Debian 12: openjdk-17-jdk-headless (no 21)
+java -version                                  # JDK 17+ (tested with JDK 17 and 21)
+git clone --branch v2.15.1 --depth 1 https://github.com/secure-software-engineering/FlowDroid
 cd FlowDroid && mvn -q package -DskipTests
 #   jar: soot-infoflow-cmd/target/soot-infoflow-cmd-jar-with-dependencies.jar
 # platforms dir = the Android SDK's "platforms" folder containing android.jar's, e.g.
@@ -77,6 +86,7 @@ Set a couple of paths for convenience:
 ROOT=/path/to/unpacked           # verified with: uv run python unpack_verify.py verify -r $ROOT
 FD_JAR=/path/to/soot-infoflow-cmd-jar-with-dependencies.jar
 PLATFORMS=$ANDROID_SDK_ROOT/platforms
+ANDROID_JAR=$PLATFORMS/android-36/android.jar   # required by Mariana Trench
 ```
 
 **Stage 0 — SELinux reachability** (needs setools; see step 3):
@@ -104,7 +114,7 @@ uv run python taint.py flowdroid -i surface.json --out fd.json \
      --jar $FD_JAR --platforms $PLATFORMS --workdir work
 
 # Mariana Trench  (installed via `uv sync --group taint`)
-uv run python taint.py mariana   -i surface.json --out mt.json --workdir work
+uv run python taint.py mariana   -i surface.json --out mt.json --system-jar $ANDROID_JAR --workdir work
 
 # Diff the two (same shared source/sink spec → apples-to-apples)
 uv run python taint.py compare   --flowdroid fd.json --mariana mt.json --out compare.json

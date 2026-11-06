@@ -124,9 +124,14 @@ class Policy:
 
     # -- step 1b: process-transition graph edges out of `domain` --------------
     def transitions_from(self, domain: str) -> Iterator[DomainEdge]:
-        dta = DomainTransitionAnalysis(self._p, reverse=False)
-        # setools caches a graph; transitions() yields step results out of `domain`.
-        for step in dta.transitions(domain):
+        # setools < 4.6 has transitions(); later versions replaced it with results() + a mode.
+        if hasattr(DomainTransitionAnalysis, "transitions"):
+            steps = DomainTransitionAnalysis(self._p, reverse=False).transitions(domain)
+        else:
+            steps = DomainTransitionAnalysis(
+                self._p, source=domain, depth_limit=1,
+                mode=DomainTransitionAnalysis.Mode.TransitionsOut).results()
+        for step in steps:
             eps = []
             for ep in getattr(step, "entrypoints", []) or []:
                 eps.append((str(ep.name), tuple(str(x) for x in getattr(ep, "entrypoint", []))))
@@ -144,7 +149,11 @@ class Policy:
         """
         if self._permmap is None:
             self._permmap = PermissionMap()
-        ifa = InfoFlowAnalysis(self._p, self._permmap, min_weight=min_weight)
+        # setools < 4.6 has infoflows(); later versions replaced it with results() + a mode.
+        legacy = hasattr(InfoFlowAnalysis, "infoflows")
+        kwargs = {} if legacy else {"source": source, "depth_limit": 1,
+                                    "mode": InfoFlowAnalysis.Mode.FlowsOut}
+        ifa = InfoFlowAnalysis(self._p, self._permmap, min_weight=min_weight, **kwargs)
         if exclude:
             try:
                 ifa.exclude = list(exclude)
@@ -152,7 +161,7 @@ class Policy:
                 pass
         # infoflows() performs a transitive BFS and yields steps; the union of targets is
         # the outbound closure. API has varied: handle both "yields steps" and "yields paths".
-        for item in ifa.infoflows(source, out=True):
+        for item in (ifa.infoflows(source, out=True) if legacy else ifa.results()):
             tgt = getattr(item, "target", None)
             if tgt is not None:
                 rules = [str(r) for r in getattr(item, "rules", [])]
